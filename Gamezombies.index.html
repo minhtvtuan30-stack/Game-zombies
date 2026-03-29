@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Zombie: Ultimate Edition</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #87CEEB; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
+        
+        /* UI CHUNG */
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 100; color: white; }
+        .hidden { display: none !important; }
+        h1 { font-size: 36px; text-shadow: 0 0 10px #00ffff; text-align: center; color: #fff; margin-bottom: 10px; text-transform: uppercase;}
+        .cyber-text { color: #00ffff; }
+        
+        .btn { background: rgba(0, 255, 255, 0.1); border: 2px solid #00ffff; border-radius: 5px; color: #00ffff; padding: 10px 20px; font-size: 16px; font-weight: bold; margin: 5px; cursor: pointer; box-shadow: 0 0 10px rgba(0,255,255,0.2); width: 80%; max-width: 300px; text-transform: uppercase; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); background: rgba(0,255,255,0.3); }
+        .btn-gold { border-color: #FFD700; color: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.2); }
+        .btn-red { border-color: #ff003c; color: #ff003c; box-shadow: 0 0 10px rgba(255,0,60,0.2); }
+
+        .panel { background: rgba(0,20,20,0.95); padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #00ffff; width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; display: flex; flex-direction: column; align-items: center; box-shadow: 0 0 20px rgba(0,255,255,0.1);}
+        
+        input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        /* HUD IN-GAME */
+        #gameUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        #stats { position: absolute; top: 10px; left: 10px; color: #fff; text-shadow: 1px 1px 2px #000; font-weight: bold; font-size: 14px; pointer-events: none; z-index: 20;}
+        .bar-bg { width: 150px; height: 12px; background: rgba(0,0,0,0.6); border-radius: 6px; border: 1px solid #fff; margin-bottom: 4px; overflow: hidden;}
+        .hp-bar-fill { width: 100%; height: 100%; background: #4CAF50; transition: width 0.2s; }
+        .energy-bar-fill { width: 100%; height: 100%; background: #FFD700; transition: width 0.1s; }
+        .info-box { color: #00ffff; font-size: 12px; margin-top: 2px; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; display: inline-block; border: 1px solid #00ffff;}
+        .gold-text { color: #FFD700; border-color: #FFD700; }
+
+        /* MULTIPLAYER / WAVE HUD */
+        #wave-hud { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); text-align: center; color: #fff; text-shadow: 2px 2px 0 #000; font-size: 18px; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 15px; border-radius: 10px; border: 1px solid #ff003c; z-index: 20;}
+        #multiplayer-status { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 12px; color: #00ffff; text-shadow: 1px 1px 2px #000; z-index: 20; background: rgba(0,0,0,0.5); padding: 3px 8px; border-radius: 5px;}
+
+        /* BẢN ĐỒ MINIMAP */
+        #minimap-container { position: absolute; top: 10px; right: 10px; width: 100px; height: 100px; background: rgba(0,0,0,0.6); border: 2px solid #00ffff; border-radius: 50%; overflow: hidden; z-index: 20; box-shadow: 0 0 10px rgba(0,255,255,0.3);}
+        #minimap { width: 100%; height: 100%; }
+
+        /* NÚT CẢM ỨNG */
+        .touch-btn { position: absolute; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,255,0.5); border-radius: 50%; color: #00ffff; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 20px; pointer-events: auto; touch-action: none; z-index: 20; flex-direction: column; text-shadow: 1px 1px 2px #000;}
+        .touch-btn:active { background: rgba(0,255,255,0.3); transform: scale(0.9); }
+        .btn-lbl { font-size: 9px; margin-top: -2px; color: #fff;}
+
+        /* BỐ TRÍ NÚT PHẢI (Chiến đấu) */
+        #btn-shoot { bottom: 30px; right: 30px; width: 80px; height: 80px; border-color: #ff003c; color: #ff003c; font-size: 35px; background: rgba(255,0,0,0.2);}
+        #btn-aim { bottom: 130px; right: 30px; width: 55px; height: 55px; font-size: 18px;}
+        #btn-jump { bottom: 30px; right: 130px; width: 60px; height: 60px; font-size: 22px;}
+        #btn-sprint { bottom: 105px; right: 105px; width: 55px; height: 55px; font-size: 22px; border-color:#FFD700; color:#FFD700;}
+        
+        /* BỐ TRÍ NÚT TRÁI (Di chuyển, Vật phẩm, Cấu hình) */
+        #joystick-zone { position: absolute; bottom: 30px; left: 30px; width: 130px; height: 130px; background: rgba(0,255,255,0.05); border: 1px dashed rgba(0,255,255,0.4); border-radius: 50%; pointer-events: auto; touch-action: none; z-index: 20; }
+        #joystick-knob { position: absolute; top: 40px; left: 40px; width: 50px; height: 50px; background: rgba(0,255,255,0.5); border-radius: 50%; pointer-events: none; }
+        
+        /* Xếp vòng cung quanh Joystick */
+        #btn-stance { bottom: 180px; left: 30px; width: 50px; height: 50px; font-size: 16px;} 
+        #btn-weapon { bottom: 170px; left: 95px; width: 50px; height: 50px; font-size: 16px;}
+        #btn-switch-item { bottom: 130px; left: 150px; width: 45px; height: 45px; font-size: 14px; border-color: #e1bee7; color: #e1bee7;}
+        #btn-use-item { bottom: 60px; left: 175px; width: 60px; height: 60px; font-size: 20px; border-color: #e1bee7; color: #e1bee7; background: rgba(156, 39, 176, 0.3);}
+        
+        /* Menu Phụ */
+        #btn-cam { top: 120px; right: 10px; width: 45px; height: 45px; font-size: 11px; }
+        #btn-menu { top: 175px; right: 10px; width: 45px; height: 45px; font-size: 11px; border-color: #ff003c; color: #ff003c;}
+        
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; background: transparent; border: 1px solid #00ffff; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; transition: 0.2s;}
+        #touch-look-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; pointer-events: auto; z-index: 5;}
+
+        /* TAB MENU UI */
+        .tabs { display: flex; width: 100%; margin-bottom: 10px; border-bottom: 2px solid #00ffff;}
+        .tab-btn { flex: 1; padding: 10px 5px; background: transparent; color: #aaa; font-weight: bold; cursor: pointer; border: none; font-size: 12px; outline: none;}
+        .tab-btn.active { color: #00ffff; border-bottom: 3px solid #00ffff; }
+        .tab-content { width: 100%; overflow-y: auto; max-height: 50vh; flex-grow: 1;}
+        .tab-content::-webkit-scrollbar { width: 5px; } .tab-content::-webkit-scrollbar-thumb { background: #00ffff; border-radius: 3px; }
+
+        .skin-list { display: flex; flex-direction: column; gap: 8px; width: 100%; padding-right: 5px;}
+        .skin-item { background: #1a1a1a; border: 2px solid #444; border-radius: 8px; padding: 10px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+        .skin-item:active { transform: scale(0.98); }
+        .skin-item.active { border-color: #00ffff; background: rgba(0, 255, 255, 0.15); box-shadow: 0 0 10px rgba(0,255,255,0.3);}
+        .skin-desc { font-size: 10px; color: #aaa; font-weight: normal; margin-top: 4px; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; padding-right: 5px;}
+        .shop-item { background: #111; border: 1px solid #333; border-radius: 5px; padding: 10px; text-align: left; position: relative; min-height: 70px;}
+        .shop-item.owned { border-color: #4CAF50; }
+        .shop-item.equipped { border-color: #00ffff; background: rgba(0,255,255,0.1); box-shadow: 0 0 10px rgba(0,255,255,0.3);}
+        .item-name { font-weight: bold; color: #fff; font-size: 13px;}
+        .item-stats { font-size: 10px; color: #aaa; margin: 5px 0;}
+        .item-price { font-size: 12px; color: #FFD700; font-weight: bold;}
+        .btn-buy { position: absolute; bottom: 5px; right: 5px; padding: 5px 10px; font-size: 10px; background: #222; border: 1px solid #FFD700; color: #FFD700; cursor: pointer; border-radius: 3px;}
+        .btn-equip { position: absolute; bottom: 5px; right: 5px; padding: 5px 10px; font-size: 10px; background: #00ffff; border: none; color: #000; cursor: pointer; border-radius: 3px;}
+
+        .loadout-container { display: flex; justify-content: center; gap: 5px; margin-bottom: 10px; width: 100%; }
+        .slot { width: 45px; height: 45px; border: 1px dashed #00ffff; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 18px; background: rgba(0,0,0,0.5);}
+        
+        #damage-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: red; opacity: 0; pointer-events: none; z-index: 15; transition: opacity 0.1s;}
+    </style>
+</head>
+<body>
+
+    <div id="damage-overlay"></div>
+
+    <!-- MÀN HÌNH TẢI -->
+    <div id="loading-initial" class="screen">
+        <h2 style="color: #00ffff;">KHỞI ĐỘNG HỆ THỐNG...</h2>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="main-menu" class="screen hidden">
+        <h1>CYBER <span class="cyber-text">SURVIVAL</span></h1>
+        <p style="color: #FFD700; font-weight: bold; font-size: 18px; margin-top: 0;">Tiền: $<span id="menu-money">0</span></p>
+        <button class="btn" onclick="window.showScreen('mode-menu')">Bắt Đầu Trận</button>
+        <button class="btn btn-gold" onclick="window.openHub()">Căn Cứ (Shop & Skins)</button>
+    </div>
+
+    <!-- CHỌN CHẾ ĐỘ CHƠI -->
+    <div id="mode-menu" class="screen hidden">
+        <div class="panel">
+            <h2 style="margin-top:0; color:#00ffff;">CHẾ ĐỘ CHƠI</h2>
+            <div class="skin-list">
+                <div class="skin-item" onclick="window.showScreen('map-menu-single')"><div><div style="color:#FFD700;">👤 Chơi Đơn (Cốt truyện Wave)</div><div class="skin-desc">Chiến đấu một mình qua từng đợt Zombie</div></div></div>
+                <div class="skin-item" onclick="window.showScreen('map-menu-multi')"><div><div style="color:#00ffff;">🌐 Chơi Co-op (Lập Phòng)</div><div class="skin-desc">Tạo phòng hoặc nhập mã 5 số để chơi chung</div></div></div>
+            </div>
+            <button class="btn btn-red" onclick="window.showScreen('main-menu')" style="width:100%; margin-top:15px;">Quay Lại</button>
+        </div>
+    </div>
+
+    <!-- CHỌN BẢN ĐỒ & ĐỘ KHÓ (SINGLE) -->
+    <div id="map-menu-single" class="screen hidden">
+        <div class="panel">
+            <h2 style="color:#00ffff; margin-top:0;">CHỌN MAP & ĐỘ KHÓ</h2>
+            <select id="map-select-single" class="btn" style="background:#111; color:#fff; width:100%;">
+                <option value="0">🏙️ Thành Phố Cũ</option>
+                <option value="1">🌲 Rừng Sinh Học</option>
+                <option value="2">🏜️ Sa Mạc Cháy</option>
+                <option value="3">❄️ Vùng Băng Giá</option>
+                <option value="4">🏭 Căn Cứ Mật</option>
+            </select>
+            <div class="skin-list" style="margin-top: 10px;">
+                <div class="skin-item" onclick="window.startSingleplayer('PEACEFUL')"><div>🕊️ Hòa Bình</div></div>
+                <div class="skin-item" onclick="window.startSingleplayer('EASY')"><div>🟢 Dễ</div></div>
+                <div class="skin-item" onclick="window.startSingleplayer('NORMAL')"><div>🟡 Bình Thường</div></div>
+                <div class="skin-item" onclick="window.startSingleplayer('HARD')"><div>🔴 Khó</div></div>
+                <div class="skin-item" onclick="window.startSingleplayer('SUPER_HARD')"><div>💀 Siêu Khó</div></div>
+            </div>
+            <button class="btn btn-red" onclick="window.showScreen('mode-menu')">Quay Lại</button>
+        </div>
+    </div>
+
+    <!-- CHỌN BẢN ĐỒ MULTIPLAYER -->
+    <div id="map-menu-multi" class="screen hidden">
+        <div class="panel">
+            <h2 style="color:#00ffff; margin-top:0;">PHÒNG CO-OP</h2>
+            <select id="map-select-multi" class="btn" style="background:#111; color:#fff; width:100%;">
+                <option value="0">🏙️ Thành Phố Cũ</option>
+                <option value="1">🌲 Rừng Sinh Học</option>
+                <option value="2">🏜️ Sa Mạc Cháy</option>
+                <option value="3">❄️ Vùng Băng Giá</option>
+                <option value="4">🏭 Căn Cứ Mật</option>
+            </select>
+            <button class="btn btn-gold" onclick="window.createRoom()" style="width: 100%; margin-top: 10px;">Tạo Phòng Mới</button>
+            <div style="border-top: 1px solid #555; padding-top: 10px; margin-top: 10px; width: 100%;">
+                <p style="margin-top: 0; color: #ccc;">Nhập mã 5 số để tham gia:</p>
+                <input type="number" id="room-code-input" placeholder="12345" style="width: 60%; padding: 10px; font-size: 18px; text-align: center; border-radius: 8px; border: 2px solid #00ffff; background: #111; color: #fff; margin-bottom: 10px; font-weight:bold; letter-spacing: 3px;" maxlength="5">
+                <button class="btn btn-blue" onclick="window.joinRoom()" style="width: 100%;">Tham Gia</button>
+            </div>
+            <button class="btn btn-red" onclick="window.showScreen('mode-menu')" style="width:100%; margin-top:10px;">Quay Lại</button>
+        </div>
+    </div>
+
+    <!-- CHỌN BUFF -->
+    <div id="buff-menu" class="screen hidden">
+        <div class="panel">
+            <h2 style="margin-top:0; color:#FFD700;">WAVE HOÀN THÀNH!</h2>
+            <p style="margin-top:0; color:#ccc;">Chọn 1 đặc quyền để tiếp tục:</p>
+            <div class="skin-list">
+                <div class="skin-item" onclick="window.applyBuff('DMG')"><div><div style="color:#ff5555">⚔️ Tăng Sát Thương (+20%)</div></div></div>
+                <div class="skin-item" onclick="window.applyBuff('HP')"><div><div style="color:#55ff55">❤️ Tăng Sinh Lực (Hồi 100%)</div></div></div>
+                <div class="skin-item" onclick="window.applyBuff('SPEED')"><div><div style="color:#55ffff">⚡ Tăng Tốc Độ (+15%)</div></div></div>
+                <div class="skin-item" onclick="window.applyBuff('AMMO')"><div><div style="color:#ff55ff">📦 Tiếp Tế Bom/Khói/Tường</div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUB (SKINS & SHOP) -->
+    <div id="hub-menu" class="screen hidden">
+        <div class="panel">
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-char" onclick="window.switchTab('char')">🧍 NV</button>
+                <button class="tab-btn" id="tab-gun-skin" onclick="window.switchTab('gun-skin')">🎨 Súng</button>
+                <button class="tab-btn" id="tab-shop" onclick="window.switchTab('shop')">🛒 Chợ ($<span id="shop-money">0</span>)</button>
+            </div>
+            
+            <div class="tab-content" id="content-char"><div class="skin-list" id="char-container"></div></div>
+            <div class="tab-content hidden" id="content-gun-skin"><div class="skin-list" id="gun-skin-container"></div></div>
+            
+            <div class="tab-content hidden" id="content-shop">
+                <p style="font-size:11px; color:#aaa; margin: 0 0 5px 0;">*Lắp tối đa 4 vũ khí*</p>
+                <div class="loadout-container" id="loadout-ui">
+                    <div class="slot" id="slot-0"></div><div class="slot" id="slot-1"></div>
+                    <div class="slot" id="slot-2"></div><div class="slot" id="slot-3"></div>
+                </div>
+                <div class="shop-grid" id="shop-container"></div>
+            </div>
+
+            <button class="btn btn-blue" onclick="window.showScreen('main-menu')" style="margin-top: 15px; width: 100%;">Hoàn Tất</button>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH CHỜ MULTIPLAYER -->
+    <div id="loading-multiplayer" class="screen hidden">
+        <h2 style="color: #00ffff;">ĐANG KẾT NỐI...</h2>
+        <p style="color: #FFD700; font-size: 24px; font-weight: bold;" id="loading-room-code">Mã phòng: Đang tạo</p>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="game-over" class="screen hidden">
+        <h1 style="color: #ff3333; font-size: 40px; text-shadow: 2px 2px 0 #000;">TỬ TRẬN</h1>
+        <p style="font-size: 18px; margin-top:0;">Wave: <span id="final-wave" style="color:#FFD700; font-weight:bold;">0</span></p>
+        <p style="font-size: 18px; margin-top:0;">Tiền thu được: <span id="final-money" style="color:#FFD700; font-weight:bold;">$0</span></p>
+        <button class="btn btn-red" style="margin-top:20px;" onclick="window.returnToMenu()">Về Căn Cứ</button>
+    </div>
+
+    <!-- GAME UI -->
+    <div id="gameUI" class="hidden">
+        <div id="stats">
+            <div class="bar-bg"><div class="hp-bar-fill" id="hp-bar"></div></div>
+            <div class="bar-bg"><div class="energy-bar-fill" id="energy-bar"></div></div>
+            <div class="info-box">Kills: <span id="score-text">0</span></div>
+            <div class="info-box gold-text">Tiền: $<span id="money-text">0</span></div><br>
+            <div class="info-box" id="weapon-info">Vũ khí</div>
+            <div class="info-box" id="item-info">Vật phẩm</div><br>
+            <div class="info-box" id="stance-info" style="color:#ff9800; border-color:#ff9800;">Tư thế: Đứng</div>
+        </div>
+
+        <div id="wave-hud">WAVE 1 <br><span style="font-size:12px; color:#aaa;" id="wave-zombies">0 Zombie</span></div>
+        <div id="multiplayer-status" class="hidden">Phòng: XXXXX</div>
+
+        <div id="minimap-container"><canvas id="minimap" width="100" height="100"></canvas></div>
+
+        <div id="touch-look-zone"></div>
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+
+        <!-- Các nút trái -->
+        <div class="touch-btn" id="btn-stance">🧍</div>
+        <div class="touch-btn" id="btn-weapon">🔄<div class="btn-lbl">Súng</div></div>
+        <div class="touch-btn" id="btn-switch-item">🔄📦</div>
+        <div class="touch-btn" id="btn-use-item">✋<div class="btn-lbl">Dùng</div></div>
+        
+        <!-- Các nút phải -->
+        <div class="touch-btn" id="btn-shoot">💥</div>
+        <div class="touch-btn" id="btn-aim">🎯<div class="btn-lbl">Ngắm</div></div>
+        <div class="touch-btn" id="btn-jump">⏫</div>
+        <div class="touch-btn" id="btn-sprint">⚡</div>
+        
+        <div class="touch-btn" id="btn-cam">Góc</div>
+        <div class="touch-btn" id="btn-menu">Thoát</div>
+        <div id="crosshair"></div>
+    </div>
+
+    <!-- TẢI THƯ VIỆN THREE.JS TỪ CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- TRÒ CHƠI & FIREBASE LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==========================================
+        // 1. DATA & STATE MANAGEMENT
+        // ==========================================
+        window.createBox = function(w, h, d, mat, x, y, z) { 
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); 
+            mesh.position.set(x, y
